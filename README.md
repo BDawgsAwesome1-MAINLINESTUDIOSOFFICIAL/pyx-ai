@@ -1,7 +1,8 @@
 # Pyx AI
 
 An open-source kid-friendly trainable neural network that learns words, phrases, and game ideas. Easy to edit, easy to train. Pyx filters content so inappropriate content is banned and safe content is allowed.
-Originally made by Mainline Studios for Pixel Place.
+
+Originally made by **Mainline Studios** for Pixel Place. The studio maintains and extends this project.
 
 ## Content Filter
 
@@ -42,3 +43,7 @@ Import `PyxAI` from `pyx_ai`. You can add words and phrases, train with safe/bad
 - **Below the line** (~lines 127+): Settings, `BAN_LINE`, `TRAINING_GROUNDS_PHRASES`, and app logic — edit freely
 
 Customize `learning_rate`, `hidden_size`, `BAN_LINE`, `DATA_DIR`, and `TRAINING_GROUNDS_PHRASES` to change how Pyx learns and what it allows.
+
+---
+
+**Mainline Studios** — Maintained for Pixel Place. Contributions welcome.

@@ -3,6 +3,8 @@ Pyx AI - A Trainable Neural Network (Kid-Friendly)
 ==================================================
 Learn easily. Edit easily. Words, phrases, and game ideas.
 
+Originally made by Mainline Studios for Pixel Place.
+
 CONTENT FILTER (for most kids):
   - ABOVE THE LINE: Inappropriate stuff = BANNED
   - BELOW THE LINE: Safe + borderline things = ALLOWED
@@ -1626,8 +1628,8 @@ class PyxAI:
 def main():
     """Interactive UI: enter phrase, then Safe / Bad / AI decide. Override anytime."""
     pyx = PyxAI()
-    print("Pyx AI - Kid-friendly filter")
-    print("Enter a phrase, then: [s]afe  [b]ad  [a]i decide  [o]verride")
+    print("Pyx AI — Kid-friendly filter (Mainline Studios)")
+    print("Enter a phrase, then: [s]afe  [b]ad  [a]i decide  [os] override safe  [ob] override bad")
     print("Commands: list | score <text> | quit\n")
     while True:
         try:
