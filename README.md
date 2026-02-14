@@ -1,82 +1,43 @@
 # Pyx AI
 
-A kid-friendly trainable neural network that learns **words**, **phrases**, and **game ideas**. Easy to edit, easy to train. Pyx filters content so inappropriate stuff stays above the line (banned) and safe stuff stays below (allowed).
+A kid-friendly trainable neural network that learns words, phrases, and game ideas. Easy to edit, easy to train. Pyx filters content so inappropriate content is banned and safe content is allowed.
 
-## Content Filter (for most kids)
+## Content Filter
 
-- **Above the line** (scores ≥ threshold) = **INAPPROPRIATE** — banned, Pyx won't use it
-- **Below the line** (scores < threshold) = **SAFE + borderline** — allowed, Pyx learns and uses it
+- **Above the line** (scores ≥ threshold) = **INAPPROPRIATE** — banned
+- **Below the line** (scores < threshold) = **SAFE** — allowed
 
-Edit `BAN_LINE` in `pyx_ai.py` (around line 133) to change the threshold. Default: `0.7`.
+Change the threshold by editing `BAN_LINE` in `pyx_ai.py`. Default: `0.7`.
 
 ## Built-in Training (Training Grounds)
 
-Pyx ships with a large built-in list of phrases in `pyx_ai.py` so it’s useful out of the box:
+Pyx includes a large built-in phrase list in `pyx_ai.py`:
 
-- **Context-aware:** Same word can be safe or bad depending on context.  
-  - Safe: *"Eat your veggies!"*, *"vegetable soup"*  
-  - Bad: *"you're a vegetable"*, *"human vegetable"*
-- **Pro-LGBTQ+:** Phrases like *"I'm gay"*, *"trans rights"*, *"LGBTQ+"*, *"love is love"*, *"pronouns"*, *"nonbinary"* are marked **safe**. Insults like *"that's so gay"* or *"no homo"* are marked **bad**.
-- **Names & figures:** Inappropriate or controversial figures (e.g. Diddy, R. Kelly, political figures like Trump, Elon Musk) are in the bad list so Pyx can flag mentions.
-- **Slurs, profanity, harm:** Hundreds of slurs (racial, disability, anti-LGBTQ, sexist), censored profanity, self-harm, harassment, sexual content, drugs, violence, scams, and dangerous challenges are marked **bad**.
-- **Safe phrases:** Hundreds of kid-friendly phrases: gaming, school, slang, food, sports, pets, family, tech, holidays, health, and more.
+- **Context-aware** — The same word can be safe or bad depending on the full phrase
+- **Pro-LGBTQ+** — Supportive and identity phrases are safe; insults and put-downs are bad
+- **Names & figures** — Inappropriate or controversial public figures are in the bad list
+- **Slurs, profanity, harm** — Racial, disability, anti-LGBTQ, sexist slurs; profanity; self-harm; harassment; sexual content; drugs; violence; scams; dangerous challenges
+- **Safe phrases** — Kid-friendly phrases for gaming, school, slang, food, sports, pets, family, tech, holidays, health, and more
 
-You can add or remove entries in `TRAINING_GROUNDS_PHRASES` in `pyx_ai.py` (search for `TRAINING_GROUNDS_PHRASES`). Pyx trains on this list every time it starts.
+Edit `TRAINING_GROUNDS_PHRASES` in `pyx_ai.py` to add or remove entries. Pyx trains on this list every time it starts.
 
 ## Quick Start
 
+Run the interactive app:
+
 ```bash
-cd pyx_ai
 python pyx_ai.py
 ```
 
-### UI Flow
+Enter a phrase, then choose **safe**, **bad**, **AI decide**, or **override**. Use `list`, `score <text>`, or `quit` for other actions.
 
-1. Enter a phrase
-2. Choose: **[s]afe** / **[b]ad** / **[a]i decide** / **[os] override safe** / **[ob] override bad**
-   - **Safe** – You say it's OK; trains and adds
-   - **Bad** – You say it's inappropriate; trains and removes
-   - **AI decide** – AI scores it and adds only if safe; you can override later
-   - **Override Safe / Bad** – Change the label (e.g. AI said bad, you say safe)
-3. Other: `list` | `score <text>` | `quit`
+## Using Pyx in Your Code
 
-## As a Module
+Import `PyxAI` from `pyx_ai`. You can add words and phrases, train with safe/bad feedback, use `ai_decide` to classify, use `set_label` to override, and call `score` to check if text is above or below the ban line. Save with `save()`.
 
-```python
-from pyx_ai import PyxAI
+## Editing the Code
 
-pyx = PyxAI()
+- **Above the line** (~lines 1–125): Core engine — edit only if you know what you're doing
+- **Below the line** (~lines 127+): Settings, `BAN_LINE`, `TRAINING_GROUNDS_PHRASES`, and app logic — edit freely
 
-# Add content
-pyx.add_word("cool")
-pyx.add_phrase("that sounds fun")
-pyx.add_game_idea("roguelike dungeon crawler")
-
-# Train with feedback (safe=True for kid-friendly, safe=False for inappropriate)
-pyx.train("pizza is great", safe=True)
-pyx.train("explicit content", safe=False)
-
-# Let AI decide and add if safe
-safe, score = pyx.ai_decide("pizza is cool")
-print(f"AI: {'SAFE' if safe else 'BAD'} ({score:.2f})")
-
-# Manual label or override
-pyx.set_label("explicit stuff", safe=False)
-
-# Check scores (above BAN_LINE = inappropriate)
-print(pyx.score("pizza"))  # 0.0-1.0
-
-# Get learned content
-print(pyx.get_words(), pyx.get_phrases(), pyx.get_game_ideas())
-
-pyx.save()
-```
-
-## Easy to Edit
-
-The file has clear sections:
-
-1. **Above the line** (~lines 1–125): Core engine — avoid editing unless you understand the neural net
-2. **Below the line** (~lines 127+): Your settings, `BAN_LINE`, `TRAINING_GROUNDS_PHRASES`, and interactive logic — edit freely!
-
-Adjust `learning_rate`, `hidden_size`, `BAN_LINE`, `DATA_DIR`, and the `TRAINING_GROUNDS_PHRASES` list to customize how Pyx learns and what it allows.
+Customize `learning_rate`, `hidden_size`, `BAN_LINE`, `DATA_DIR`, and `TRAINING_GROUNDS_PHRASES` to change how Pyx learns and what it allows.
