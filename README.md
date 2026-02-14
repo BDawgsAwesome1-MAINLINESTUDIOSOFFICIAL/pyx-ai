@@ -1,7 +1,7 @@
 # Pyx AI
 
 An open-source kid-friendly trainable neural network that learns words, phrases, and game ideas. Easy to edit, easy to train. Pyx filters content so inappropriate content is banned and safe content is allowed.
-Originally made for Pixel Place.
+Originally made by Mainline Studios for Pixel Place.
 
 ## Content Filter
 
