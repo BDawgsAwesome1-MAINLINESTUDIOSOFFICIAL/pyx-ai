@@ -1518,6 +1518,7 @@ class PyxAI:
         self._db = init_firestore()
         self._session_bad: set = set()   # phrases marked bad this session → score 1.0
         self._session_safe: set = set()  # phrases marked safe this session → score 0.0
+        self._explanation_phrases: List[Tuple[str, bool]] = []  # all phrases we know (for "why" explanation)
         self._load()
         self._load_training_grounds()
 
@@ -1556,6 +1557,27 @@ class PyxAI:
         inputs = self._text_to_input(text)
         return self.brain.predict(inputs)[0]
 
+    def explain(self, text: str, n: int = 3) -> Tuple[List[Tuple[str, float]], List[Tuple[str, float]]]:
+        """Return top-n most similar phrases marked GOOD and top-n marked BAD (phrase, similarity 0–1)."""
+        if not self._explanation_phrases:
+            return ([], [])
+        inp = self._text_to_input(text)
+        safe_sims: List[Tuple[str, float]] = []
+        bad_sims: List[Tuple[str, float]] = []
+        for phrase, safe in self._explanation_phrases:
+            if phrase == text:
+                continue
+            other = self._text_to_input(phrase)
+            sim = 1.0 - (sum((a - b) ** 2 for a, b in zip(inp, other)) ** 0.5) / (len(inp) ** 0.5)
+            sim = max(0.0, min(1.0, sim))
+            if safe:
+                safe_sims.append((phrase, sim))
+            else:
+                bad_sims.append((phrase, sim))
+        safe_sims.sort(key=lambda x: -x[1])
+        bad_sims.sort(key=lambda x: -x[1])
+        return (safe_sims[:n], bad_sims[:n])
+
     def respond(self, prompt: str, category: str = "phrases") -> Optional[str]:
         """Get a learned response. Returns None if nothing matches."""
         store = self.memory.get_allowed(category)
@@ -1582,6 +1604,7 @@ class PyxAI:
         self.memory.add("words", word, pred if safe else 0.9)
         if self._db:
             set_phrase_in_firestore(self._db, word, safe, "words", source="user")
+        self._explanation_phrases.append((word, safe))
 
     def add_phrase(self, phrase: str, safe: bool = True):
         """Add a phrase - trains and stores if safe for kids."""
@@ -1596,6 +1619,7 @@ class PyxAI:
         self.memory.add("phrases", phrase, pred if safe else 0.9)
         if self._db:
             set_phrase_in_firestore(self._db, phrase, safe, "phrases", source="user")
+        self._explanation_phrases.append((phrase, safe))
 
     def add_game_idea(self, idea: str, safe: bool = True):
         """Add a game idea - trains and stores if safe for kids."""
@@ -1610,6 +1634,7 @@ class PyxAI:
         self.memory.add("game_ideas", idea, pred if safe else 0.9)
         if self._db:
             set_phrase_in_firestore(self._db, idea, safe, "game_ideas", source="user")
+        self._explanation_phrases.append((idea, safe))
 
     def ai_decide(self, text: str, category: str = "phrases") -> Tuple[bool, float]:
         """
@@ -1625,12 +1650,14 @@ class PyxAI:
             self.train(text, True, category, epochs=2)  # Light reinforce
             if self._db:
                 set_phrase_in_firestore(self._db, text, True, category, source="user")
+            self._explanation_phrases.append((text, True))
         else:
             self._session_bad.add(text)
             self._session_safe.discard(text)
             self.train(text, False, category, epochs=2)
             if self._db:
                 set_phrase_in_firestore(self._db, text, False, category, source="user")
+            self._explanation_phrases.append((text, False))
         return (safe, s)
 
     def set_label(self, text: str, safe: bool, category: str = "phrases") -> str:
@@ -1649,6 +1676,7 @@ class PyxAI:
                 self.memory.add(category, text, pred)
             if self._db:
                 set_phrase_in_firestore(self._db, text, True, category, source="override")
+            self._explanation_phrases.append((text, True))
             return "Marked SAFE and added."
         else:
             self._session_bad.add(text)
@@ -1657,6 +1685,7 @@ class PyxAI:
             self.train(text, False, category)
             if self._db:
                 set_phrase_in_firestore(self._db, text, False, category, source="override")
+            self._explanation_phrases.append((text, False))
             return "Marked BAD and removed."
 
     def get_words(self) -> List[str]:
@@ -1681,6 +1710,7 @@ class PyxAI:
 
     def _load_training_grounds(self):
         """Train Pyx on built-in phrases, then on Firestore (so overrides/user data apply)."""
+        self._explanation_phrases = list(TRAINING_GROUNDS_PHRASES)
         for text, safe in TRAINING_GROUNDS_PHRASES:
             self.memory.remove("phrases", text)
             self.train(text, safe, "phrases")
@@ -1689,7 +1719,11 @@ class PyxAI:
                 if not self.memory.is_banned(pred):
                     self.memory.add("phrases", text, pred)
         if self._db:
+            seen = {p for p, _ in self._explanation_phrases}
             for text, safe, category in get_phrases_from_firestore(self._db):
+                if text not in seen:
+                    seen.add(text)
+                    self._explanation_phrases.append((text, safe))
                 self.memory.remove(category, text)
                 self.train(text, safe, category)
                 if safe:
@@ -1735,6 +1769,12 @@ def main():
                 s = pyx.score(t)
                 status = "INAPPROPRIATE" if pyx.memory.is_banned(s) else "SAFE"
                 print(f"Score: {s:.3f} ({status})")
+                good, bad = pyx.explain(t, n=3)
+                if good or bad:
+                    if good:
+                        print("  Similar GOOD:", ", ".join(f'"{p}" ({sim:.2f})' for p, sim in good))
+                    if bad:
+                        print("  Similar BAD:", ", ".join(f'"{p}" ({sim:.2f})' for p, sim in bad))
                 continue
 
             choice = input("  Safe [s] / Bad [b] / AI decide [a] / Override Safe [os] / Override Bad [ob]: ").strip().lower()
@@ -1747,6 +1787,12 @@ def main():
                 safe, score = pyx.ai_decide(text, cat)
                 status = "SAFE" if safe else "INAPPROPRIATE"
                 print(f"AI says: {status} (score {score:.3f}). {'Added.' if safe else 'Saved as bad (Firestore). Override with Safe if wrong.'}")
+                good, bad = pyx.explain(text, n=3)
+                if good or bad:
+                    if good:
+                        print("  Similar GOOD:", ", ".join(f'"{p}" ({sim:.2f})' for p, sim in good))
+                    if bad:
+                        print("  Similar BAD:", ", ".join(f'"{p}" ({sim:.2f})' for p, sim in bad))
             elif choice in ("os", "override safe"):
                 print(pyx.set_label(text, True, cat))
             elif choice in ("ob", "override bad"):
