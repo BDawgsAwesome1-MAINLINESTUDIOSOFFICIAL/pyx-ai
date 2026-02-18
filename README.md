@@ -83,6 +83,8 @@ python3 pyx_ai.py
 **Other commands**
 - `python3 pyx_ai.py seed-firestore` — upload built-in phrases to Firestore (one-time, or to refresh).
 - `python3 pyx_ai.py firestore-check` — show project ID and link to create the Firestore database.
+- `python3 pyx_server.py [--port 8765] [--host 0.0.0.0]` — run Pyx as an HTTP service so other apps can call it: `POST /score` with `{"text": "..."}` returns `{"score", "bad", "censored"}`; `GET /health` for liveness.
+- **No server 24/7:** Deploy to **Firebase Hosting + Cloud Functions** — see [DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md) (Pyx at `https://YOUR_PROJECT.web.app/api/score`). Or deploy `pyx_serverless.handler` as AWS Lambda; see [DEPLOY_SERVERLESS.md](DEPLOY_SERVERLESS.md). Pyx runs only when a request comes in.
 
 **In the app:** Enter a phrase, then choose **safe**, **bad**, **AI decide**, or **override**. Use `list`, `score <text>`, or `quit`.
 

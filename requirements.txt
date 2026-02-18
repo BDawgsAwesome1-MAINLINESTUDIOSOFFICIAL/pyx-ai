@@ -2,3 +2,6 @@
 # Core: Python standard library only (json, math, random, pathlib, typing)
 # Optional Firestore sync (pyx-ai project):
 firebase-admin>=6.0.0
+# Web API (app.py / gunicorn for pyxaiapi):
+flask>=3.0.0
+gunicorn>=21.0.0

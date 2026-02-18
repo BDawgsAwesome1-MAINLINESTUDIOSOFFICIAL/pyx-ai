@@ -170,6 +170,11 @@ class PyxMemory:
 BAN_LINE = 0.7  # Scores above = inappropriate (banned). Below = safe + borderline (allowed).
 DATA_DIR = Path(__file__).parent / "data"
 
+
+def censor_letters(text: str) -> str:
+    """Replace every letter (A–Z, a–z) with ~. Use when content is bad so it can still be shown censored."""
+    return re.sub(r"[A-Za-z]", "~", text)
+
 # Training Grounds: phrases marked appropriate (True) or inappropriate (False) for Pyx.
 # Context matters: Pyx scores the FULL text, so train on full phrases. e.g. "eat your veggies" = safe,
 # "you're a vegetable" = bad. Same word, different context = different score.
