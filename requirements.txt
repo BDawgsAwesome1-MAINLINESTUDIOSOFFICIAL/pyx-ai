@@ -1,2 +1,4 @@
-# Pyx AI - no external dependencies required!
-# Uses only Python standard library: json, math, random, pathlib, typing
+# Pyx AI
+# Core: Python standard library only (json, math, random, pathlib, typing)
+# Optional Firestore sync (pyx-ai project):
+firebase-admin>=6.0.0
